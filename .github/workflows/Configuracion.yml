@@ -60,9 +60,6 @@ jobs:
           push: true
           tags: ghcr.io/angelfergen/tos:latest
 
-
-    - run: 'kubectl get pods'
-
   verify:
 
     needs: build
