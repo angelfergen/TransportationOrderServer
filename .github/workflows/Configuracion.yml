@@ -60,7 +60,8 @@ jobs:
           push: true
           tags: ghcr.io/angelfergen/tos:latest
 
-          
+
+    - run: 'kubectl get pods'
 
   verify:
 
@@ -87,3 +88,30 @@ jobs:
       run: mvn -B verify --file pom.xml
 
     - run: ls ${GITHUB_WORKSPACE}/target/*.jar
+  
+  deploy:
+    needs: verify-and-package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - uses: actions/checkout@v3
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCLOUD_SA }}'
+
+    - id: 'get-credentials'
+      uses: 'google-github-actions/get-gke-credentials@v1'
+      with:
+        cluster_name: 'apsv-23'
+        location: 'us-central1'
+
+    # The KUBECONFIG env var is automatically exported and picked up by kubectl.
+
+    - id: 'deployment-mypod'
+      run: 'kubectl create secret docker-registry github-registry --docker-server="ghcr.io" --docker-username="angelfergen" --docker-password="${{ secrets.PAT }}" --docker-email="angel.fdezgetino@gmail.com" -o yaml --dry-run=client | kubectl apply -f -'
+    - run: 'kubectl apply -f deployment.yaml'
+    - run: 'kubectl get deployments'
