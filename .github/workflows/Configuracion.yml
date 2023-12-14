@@ -60,6 +60,8 @@ jobs:
           push: true
           tags: ghcr.io/angelfergen/tos:latest
 
+          
+
   verify:
 
     needs: build
